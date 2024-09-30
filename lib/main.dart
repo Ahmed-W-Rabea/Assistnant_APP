@@ -16,7 +16,10 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'AWR Helper',
       theme: ThemeData.light(useMaterial3: true).copyWith(
-        scaffoldBackgroundColor: Pallete.whiteColor
+        scaffoldBackgroundColor: Pallete.whiteColor,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Pallete.whiteColor
+        )
       ),
      home: HomePage(),
     );
