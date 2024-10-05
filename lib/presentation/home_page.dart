@@ -1,6 +1,9 @@
 import 'package:assistant_app/croe/constants/pallete.dart';
 import 'package:assistant_app/features/feature_box.dart';
 import 'package:flutter/material.dart';
+import 'package:speech_to_text/speech_recognition_result.dart';
+import 'package:speech_to_text/speech_to_text.dart';
+import 'package:permission_handler/permission_handler.dart'; // Add this for permissions
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -10,6 +13,59 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final speechToText = SpeechToText();
+  var lastWords = "";
+
+  @override
+  void initState() {
+    super.initState();
+    initSpeechToText();
+  }
+
+  Future<void> initSpeechToText() async {
+    // Request microphone permission if not already granted
+    var status = await Permission.microphone.request();
+    if (status.isGranted) {
+      bool available = await speechToText.initialize(
+        onError: (error) => print('Error: $error'), // Log any errors
+      );
+      if (!available) {
+        // Show a message to the user if speech recognition is not available
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Speech recognition is not available on this device.')));
+      }
+    } else {
+      // If permission is denied, notify the user
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Microphone permission is required to use speech recognition.')));
+    }
+    setState(() {});
+  }
+
+  Future<void> startListening() async {
+    if (speechToText.isNotListening) {
+      await speechToText.listen(onResult: onSpeechResult);
+      setState(() {});
+    }
+  }
+
+  Future<void> stopListening() async {
+    await speechToText.stop();
+    setState(() {});
+  }
+
+  void onSpeechResult(SpeechRecognitionResult result) {
+    setState(() {
+      lastWords = result.recognizedWords;
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    speechToText.stop();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -21,7 +77,7 @@ class _HomePageState extends State<HomePage> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            //image of assistant
+            // Image of assistant
             Stack(
               children: [
                 Center(
@@ -45,7 +101,7 @@ class _HomePageState extends State<HomePage> {
                 ),
               ],
             ),
-            //greeting container
+            // Greeting container
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               margin:
@@ -71,7 +127,7 @@ class _HomePageState extends State<HomePage> {
               margin: EdgeInsets.only(top: 10, left: 22),
               alignment: Alignment.centerLeft,
               child: const Text(
-                "Here are few commands",
+                "Here are a few commands",
                 style: TextStyle(
                     fontFamily: "Cera Pro",
                     color: Pallete.mainFontColor,
@@ -79,15 +135,14 @@ class _HomePageState extends State<HomePage> {
                     fontWeight: FontWeight.bold),
               ),
             ),
-
-            //Features list
-            const Column(
+            // Features list
+            Column(
               children: [
                 FeatureBox(
                   color: Pallete.firstSuggestionBoxColor,
                   headerText: "Chat GPT",
                   descriptionText:
-                      "A smarter way to stay organized and informed with ChatGpT",
+                      "A smarter way to stay organized and informed with ChatGPT",
                 ),
                 FeatureBox(
                   color: Pallete.secondSuggestionBoxColor,
@@ -99,7 +154,7 @@ class _HomePageState extends State<HomePage> {
                   color: Pallete.thirdSuggestionBoxColor,
                   headerText: "Smart Voice Assistant",
                   descriptionText:
-                      "Get the best og both worlds with a voice assistant powered by Dall-E and ChatGPT",
+                      "Get the best of both worlds with a voice assistant powered by Dall-E and ChatGPT",
                 ),
               ],
             )
@@ -108,7 +163,15 @@ class _HomePageState extends State<HomePage> {
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Pallete.firstSuggestionBoxColor,
-        onPressed: () {},
+        onPressed: () async {
+          if (await speechToText.hasPermission && !speechToText.isListening) {
+            await startListening();
+          } else if (speechToText.isListening) {
+            await stopListening();
+          } else {
+            initSpeechToText();
+          }
+        },
         child: const Icon(Icons.mic),
       ),
     );

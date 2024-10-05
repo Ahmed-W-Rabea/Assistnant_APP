@@ -4,11 +4,18 @@
     <uses-permission android:name="android.permission.BLUETOOTH"/>
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
+      <!-- Queries section -->
     <queries>
-    <intent>
-        <action android:name="android.speech.RecognitionService" />
-    </intent>
-</queries>
+        <!-- Required for speech recognition services -->
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
+        <!-- Required for process text actions -->
+        <intent>
+            <action android:name="android.intent.action.PROCESS_TEXT" />
+            <data android:mimeType="text/plain" />
+        </intent>
+    </queries>
     <application
         android:label="assistant_app"
         android:name="${applicationName}"
